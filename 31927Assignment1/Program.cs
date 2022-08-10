@@ -40,7 +40,7 @@ namespace _31927Assignment1
             }
 
             int x; //initialise cursor positions for input fields
-            int y = string.IsNullOrWhiteSpace(subtitle) ? 3 : 5;
+            int y = string.IsNullOrWhiteSpace(subtitle) ? 3 : 5; //start at 5 if there's a subtitle, otherwise 3
             foreach (string line in File.ReadLines(content))
             {
                 string text = line;
@@ -121,6 +121,11 @@ namespace _31927Assignment1
                     MainMenu(true, "Invalid option; please a input a number between 1 - 7.");
                     break;
             }
+        }
+
+        static void CreateAccountMenu()
+        {
+
         }
     }
 }
