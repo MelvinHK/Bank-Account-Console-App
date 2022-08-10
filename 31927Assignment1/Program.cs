@@ -23,7 +23,7 @@ namespace _31927Assignment1
             LoginMenu();
         }
 
-        static void Table(string title, string subtitle = "", string content = "") //dynamic table drawing
+        static void Table(string title, string subtitle = "", string content = "") //draw table
         {
             pos.Clear(); //clear any previously stored positions
             Console.Clear(); //clear any previous display
@@ -64,21 +64,24 @@ namespace _31927Assignment1
                                  text, ""); //create padding before and after text
         }
 
-        static void LoginMenu(bool err = false, string msg = "")
+        static void LoginMenu(string err = "")
         {
             string[] credentials = new string[2];
             Table("Bank Account Management Console", "Login", "MenuTemplates/LoginMenu.txt");
-            if (err)
-                Console.WriteLine("\n" + msg);
+            if (!string.IsNullOrEmpty(err))
+                Console.WriteLine("\n" + err);
             for (int i = 0; i < pos.Count; i++)
             {
                 Console.SetCursorPosition(originX + pos[i].Item1, originY + pos[i].Item2);
                 credentials[i] = Console.ReadLine();
                 if (string.IsNullOrWhiteSpace(credentials[i]))
+                {
                     if (i == 0)
-                        LoginMenu(true, "The username field is required.");
+                        LoginMenu("The username field is required.");
                     else
-                        LoginMenu(true, "The password field is required.");
+                        LoginMenu("The password field is required.");
+                    return;
+                }
             }
             foreach (string line in File.ReadLines("Storage/Login.txt"))
             {
@@ -89,19 +92,20 @@ namespace _31927Assignment1
                     return;
                 }
             }
-            LoginMenu(true, "Incorrect username or password.");
+            LoginMenu("Incorrect username or password.");
         }
 
-        static void MainMenu(bool err = false, string msg = "")
+        static void MainMenu(string err = "")
         {
-            Table("Main Menu", "Options:", "MenuTemplates/MainMenu.txt");
-            if (err)
-                Console.WriteLine("\n" + msg);
+            Table("Main Menu", "Options", "MenuTemplates/MainMenu.txt");
+            if (!string.IsNullOrEmpty(err))
+                Console.WriteLine("\n" + err);
             Console.SetCursorPosition(originX + pos[0].Item1, originY + pos[0].Item2);
             string choice = Console.ReadLine();
             switch (choice)
             {
                 case "1":
+                    CreateAccountMenu();
                     break;
                 case "2":
                     break;
@@ -117,14 +121,20 @@ namespace _31927Assignment1
                     LoginMenu();
                     break;
                 default:
-                    MainMenu(true, "Invalid option; please a input a number between 1 - 7.");
+                    MainMenu("Invalid option; please a input a number between 1 - 7.");
                     break;
             }
         }
 
         static void CreateAccountMenu()
         {
-
+            string[] credentials = new string[5];
+            Table("Create New Account", "Enter details", "MenuTemplates/NewAccountMenu.txt");
+            for (int i = 0; i < pos.Count; i++)
+            {
+                Console.SetCursorPosition(originX + pos[i].Item1, originY + pos[i].Item2);
+                credentials[i] = Console.ReadLine();
+            }
         }
     }
 }
