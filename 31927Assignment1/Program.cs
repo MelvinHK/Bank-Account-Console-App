@@ -83,7 +83,6 @@ namespace _31927Assignment1
             foreach (string line in File.ReadLines("Storage/Login.txt"))
             {
                 string[] check = line.Split('|');
-                Console.WriteLine(check[0] + " " + check[1]);
                 if (check[0].Trim().ToLower().Equals(credentials[0].ToLower()) && check[1].Trim().Equals(credentials[1]))
                 {
                     MainMenu();
