@@ -22,7 +22,7 @@ namespace _31927Assignment1
             originX = Console.CursorLeft;
             originY = Console.CursorTop;
             bool login = true;
-            while (true) //the main loop
+            while (true) //main program loop
             {
                 if (login)
                 {
@@ -52,7 +52,7 @@ namespace _31927Assignment1
             }
         }
 
-        static void Table(string title, string subtitle = "", string content = "") //dynamically draw tables, content = .txt file path for table body
+        static void Table(string title, string subtitle = "", string content = "") //dynamically draw tables, content = .txt file path for table body (folder: MenuTemplates)
         {
             pos.Clear(); //clear any previously stored positions
             Console.Clear(); //clear any previous display
@@ -81,8 +81,8 @@ namespace _31927Assignment1
                 string text = line;
                 if (!string.IsNullOrWhiteSpace(line) && line[line.Length - 1] == '|') //check if line is an input field
                 {
-                    text = line.Remove(line.Length - 1); //remove delimiter
-                    x = line.Length + 1; //increase x by 1 because of removing delimiter
+                    text = line.Remove(line.Length - 1); //remove delimiter, see LoginMenu.txt
+                    x = line.Length + 1; //x position = end of string, + 1 for space
                     pos.Add((x, y)); //store input field's input position
                 }
                 Console.WriteLine($"║{text}{new String(' ', width - text.Length)}║");
@@ -108,13 +108,13 @@ namespace _31927Assignment1
             }
         }
 
-        static void ClearField((int, int) pos) 
+        static void ClearField(int x, int y)
         {
-            Console.SetCursorPosition(originX + pos.Item1, originY + pos.Item2);
-            Console.Write(new String(' ', width - pos.Item1));
+            Console.SetCursorPosition(originX + x, originY + y);
+            Console.Write(new String(' ', width - x));
         }
 
-        static void WriteErrorMsg((int, int) pos, string msg) 
+        static void WritePrompt((int, int) pos, string msg) 
         {
             Console.SetCursorPosition(pos.Item1 + 1, pos.Item2 + 1);
             Console.WriteLine(CentreText(msg));
@@ -138,15 +138,13 @@ namespace _31927Assignment1
                     else
                     {
                         //password input and masking loop
-                        StringBuilder pw = new StringBuilder();
-                        while (true)
+                        var key = Console.ReadKey(true); //read keystroke (true = doesnt display keystroke)
+                        StringBuilder input = new StringBuilder();
+                        while (key.Key != ConsoleKey.Enter)
                         {
-                            var key = Console.ReadKey(true); //hide default typing
-                            if (key.Key == ConsoleKey.Enter) 
-                                break;
-                            if (key.Key == ConsoleKey.Backspace && pw.Length > 0)
+                            if (key.Key == ConsoleKey.Backspace && input.Length > 0)
                             {
-                                pw.Remove(pw.Length - 1, 1);
+                                input.Remove(input.Length - 1, 1);
                                 Console.CursorLeft--; //on the display, go back to the last char typed
                                 Console.Write(' '); //replace it with emptiness
                                 Console.CursorLeft--; //have to go back again because Write() makes cursor go forward one
@@ -154,11 +152,11 @@ namespace _31927Assignment1
                             else if (key.Key != ConsoleKey.Backspace) //if any other key was pressed
                             {
                                 Console.Write("*"); //display keystroke as asterik
-                                pw.Append(key.KeyChar); //append actual keystroke
+                                input.Append(key.KeyChar); //append actual keystroke
                             }
-                            //go again
+                            key = Console.ReadKey(true); //read next keystroke
                         }
-                        credentials[i] = pw.ToString(); //enter was pressed, now pass it over to credentials array
+                        credentials[i] = input.ToString(); //enter was pressed, now pass it over to credentials array
                     }    
                 }
                 //attempt to find match
@@ -172,7 +170,7 @@ namespace _31927Assignment1
                 }
                 credentials = new string[2]; //...otherwise they were invalid credentials...
                 ClearAllFields(pos);
-                WriteErrorMsg(errorMsgPos, "Incorrect username or password.");
+                WritePrompt(errorMsgPos, "Incorrect username or password.");
                 //...so go again
             }
         }
@@ -189,13 +187,12 @@ namespace _31927Assignment1
             {
                 Console.SetCursorPosition(originX + pos[0].Item1, originY + pos[0].Item2); //go to input field position
                 choice = Console.ReadLine();
-                if (!int.TryParse(choice, out _) || 1 > Int32.Parse(choice) || Int32.Parse(choice) > 7) //check if input isnt an integer, otherwise then if it isnt in range
+                if (!int.TryParse(choice, out _) || 1 > Int32.Parse(choice) || Int32.Parse(choice) > 7) //check if input isnt an integer; if it is, check if it isnt in range
                 {
                     ClearAllFields(pos);
-                    WriteErrorMsg(errorMsgPos, "Invalid option; input a number between 1-7.");
+                    WritePrompt(errorMsgPos, "Invalid option; input a number between 1-7.");
                 }
-                else
-                    break;
+                else break;
             }
             return Int32.Parse(choice); //return choice 
         }
@@ -204,18 +201,59 @@ namespace _31927Assignment1
         {
             Table("Create New Account", "Enter details", "MenuTemplates/NewAccountMenu.txt");
             (int, int) errorMsgPos = Console.GetCursorPosition();
+            Console.SetCursorPosition(2, 1);
+            Console.Write("< Esc");
             ResizeWindow(errorMsgPos);
             string[] credentials = new string[5];
+            string input;
+
             for (int i = 0; i < pos.Count; i++)
             {
                 Console.SetCursorPosition(originX + pos[i].Item1, originY + pos[i].Item2);
-                credentials[i] = Console.ReadLine();
+                input = ReadLineWithCancel(); //if esc is pressed, exits this menu
+                if (input == null)
+                    return;
+                while (i == 3 || i == 4) //phone and email validation
+                {
+                    if (i == 3)
+                    {
+
+                        ClearField(pos[i].Item1, pos[i].Item2);
+                    }
+                }
+                credentials[i] = input;
             }
+        }
+
+        private static string ReadLineWithCancel() //returns null if esc is pressed during input (useful for going back to main menu)
+        {
+            string input;
+            StringBuilder line = new StringBuilder();
+            var key = Console.ReadKey(true);
+            
+            while (key.Key != ConsoleKey.Enter && key.Key != ConsoleKey.Escape)
+            {
+                if (key.Key == ConsoleKey.Backspace && line.Length > 0)
+                {
+                    line.Remove(line.Length - 1, 1);
+                    Console.CursorLeft--;
+                    Console.Write(' '); 
+                    Console.CursorLeft--;
+                }
+                else
+                {
+                    Console.Write(key.KeyChar);
+                    line.Append(key.KeyChar);
+                }
+                key = Console.ReadKey(true);
+            }
+            //
+            return input = key.Key == ConsoleKey.Enter ? line.ToString() : null;
         }
 
         static void ResizeWindow((int, int) pos) //resize window according to table height and width
         {
-            try //try because WindowHeight/Width is incompatible on OSX
+            try //try because set WindowHeight/Width is incompatible on OSX
             {
                 Console.WindowHeight = pos.Item2 + 3;
                 Console.WindowWidth = width + 3;
