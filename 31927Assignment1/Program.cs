@@ -93,7 +93,7 @@ namespace _31927Assignment1
             Console.WriteLine($"╚{border}╝");
         }
 
-        static string CentreText(string text) //centres text within table
+        static string CentreText(string text) //centres text WITHIN table (not for centering in console window)
         {
             return String.Format("{0," + ((width / 2) + (text.Length / 2)) + "}" +
                                  "{1," + ((width / 2) - (text.Length / 2)) + "}",
@@ -116,10 +116,13 @@ namespace _31927Assignment1
             Console.SetCursorPosition(originX + x, originY + y);
         }
 
-        static void WritePrompt((int, int) pos, string msg) 
+        static void WritePrompt((int, int) pos, string msg, bool newLine = true)
         {
-            Console.SetCursorPosition(pos.Item1 + 1, pos.Item2 + 1);
-            Console.WriteLine(CentreText(msg));
+            Console.SetCursorPosition(((width - msg.Length) / 2) + 1, pos.Item2 + 1); //write at centre of console window
+            if (newLine)
+                Console.WriteLine(msg);
+            else
+                Console.Write(msg);
         }
 
         static void LoginMenu()
@@ -236,36 +239,32 @@ namespace _31927Assignment1
                     }
                     credentials[i] = input;
                 }
-                string confirm = "Confirm details (Y/N)";
-                WritePrompt(errorMsgPos, confirm);
+                WritePrompt(errorMsgPos, "Confirm details (Y/N)", false);
                 while (true)
                 {
-                    (int, int) confirmPos = (((width - confirm.Length) / 2) + confirm.Length + 2, errorMsgPos.Item2 + 1);
-                    Console.SetCursorPosition(confirmPos.Item1, confirmPos.Item2);
-                    input = ReadLineWithCancel();
-                    if (input == null) 
-                        return;
-                    if (input.ToLower().Equals("y"))
+                    ConsoleKeyInfo choice = Console.ReadKey(true);
+                    if (choice.KeyChar.Equals('y'))
                     {
                         Random generator = new Random();
                         string id = generator.Next(0, 1000000).ToString("D6");
                         //check if id is unique (nest below in for loop < 1000000. if for loop becomes finished = max capacity)
                         ResizeWindow(Console.GetCursorPosition());
                         WritePrompt(errorMsgPos, $"Account created (id: {id})");
-                        WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Details sent to its email.");
+                        WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Details sent to email.", false);
 
                         Console.ReadKey(true);
                         //add details to id.txt file
                         return;
                     }
-                    if (input.ToLower().Equals("n"))
+                    if (choice.KeyChar.Equals('n'))
                     {
                         credentials = new string[5];
                         ClearAllFields(pos);
-                        WritePrompt(errorMsgPos, new String(' ', confirm.Length));
+                        WritePrompt(errorMsgPos, new String(' ', width));
                         break;
                     }
-                    ClearField(confirmPos.Item1, confirmPos.Item2);
+                    if (choice.Key == ConsoleKey.Escape)
+                        return;
                 }
             }
         }
