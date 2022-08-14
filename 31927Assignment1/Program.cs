@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.ComponentModel.DataAnnotations;
+
 
 namespace _31927Assignment1
 {
@@ -108,10 +109,11 @@ namespace _31927Assignment1
             }
         }
 
-        static void ClearField(int x, int y)
+        static void ClearField(int x, int y) //clears an input field and maintains cursor pos
         {
             Console.SetCursorPosition(originX + x, originY + y);
-            Console.Write(new String(' ', width - x));
+            Console.Write(new String(' ', width - x)); 
+            Console.SetCursorPosition(originX + x, originY + y);
         }
 
         static void WritePrompt((int, int) pos, string msg) 
@@ -207,21 +209,64 @@ namespace _31927Assignment1
             string[] credentials = new string[5];
             string input;
 
-            for (int i = 0; i < pos.Count; i++)
+            while (true)
             {
-                Console.SetCursorPosition(originX + pos[i].Item1, originY + pos[i].Item2);
-                input = ReadLineWithCancel(); //if esc is pressed, exits this menu
-                if (input == null)
-                    return;
-                while (i == 3 || i == 4) //phone and email validation
+                for (int i = 0; i < pos.Count; i++)
                 {
-                    if (i == 3)
+                    Console.SetCursorPosition(originX + pos[i].Item1, originY + pos[i].Item2);
+                    input = ReadLineWithCancel(); //if esc is pressed, returns null
+                    if (input == null) //menu is exited
+                        return;
+                    while (i == 3 || i == 4) //phone (3) and email (4) validation
                     {
-
+                        if (i == 3)
+                        {
+                            if (!(int.TryParse(input, out _) && input.Length <= 10))
+                                WritePrompt(errorMsgPos, "Invalid phone format.");
+                            else break;
+                        }
+                        else
+                        {
+                            if (!new EmailAddressAttribute().IsValid(input)) //check for gmail.com, student email, outlook.com later
+                                WritePrompt(errorMsgPos, "Invalid email format.");
+                            else break;
+                        }
                         ClearField(pos[i].Item1, pos[i].Item2);
+                        input = ReadLineWithCancel();
                     }
+                    credentials[i] = input;
                 }
-                credentials[i] = input;
+                string confirm = "Confirm details (Y/N)";
+                WritePrompt(errorMsgPos, confirm);
+                while (true)
+                {
+                    (int, int) confirmPos = (((width - confirm.Length) / 2) + confirm.Length + 2, errorMsgPos.Item2 + 1);
+                    Console.SetCursorPosition(confirmPos.Item1, confirmPos.Item2);
+                    input = ReadLineWithCancel();
+                    if (input == null) 
+                        return;
+                    if (input.ToLower().Equals("y"))
+                    {
+                        Random generator = new Random();
+                        string id = generator.Next(0, 1000000).ToString("D6");
+                        //check if id is unique (nest below in for loop < 1000000. if for loop becomes finished = max capacity)
+                        ResizeWindow(Console.GetCursorPosition());
+                        WritePrompt(errorMsgPos, $"Account created (id: {id})");
+                        WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Details sent to its email.");
+
+                        Console.ReadKey(true);
+                        //add details to id.txt file
+                        return;
+                    }
+                    if (input.ToLower().Equals("n"))
+                    {
+                        credentials = new string[5];
+                        ClearAllFields(pos);
+                        WritePrompt(errorMsgPos, new String(' ', confirm.Length));
+                        break;
+                    }
+                    ClearField(confirmPos.Item1, confirmPos.Item2);
+                }
             }
         }
 
@@ -240,14 +285,13 @@ namespace _31927Assignment1
                     Console.Write(' '); 
                     Console.CursorLeft--;
                 }
-                else
+                else if (key.Key != ConsoleKey.Backspace) //have to include this else if, otherwise the user can keep pressing backspace past the input field...
                 {
                     Console.Write(key.KeyChar);
                     line.Append(key.KeyChar);
                 }
                 key = Console.ReadKey(true);
             }
-            //
             return input = key.Key == ConsoleKey.Enter ? line.ToString() : null;
         }
 
