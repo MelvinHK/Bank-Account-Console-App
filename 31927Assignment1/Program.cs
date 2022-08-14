@@ -14,12 +14,11 @@ namespace _31927Assignment1
         const int width = 50; //width of table
         static int originX;
         static int originY;
-        static List<(int, int)> pos = new List<(int, int)>(); //store cursor positions for input fields when creating tables
+        static List<(int, int)> inputPos = new List<(int, int)>(); //store cursor positions for input fields when creating tables
 
         static void Main(string[] args)
         {
             Console.Title = "Bank Account Management Console";
-            Console.Clear();
             originX = Console.CursorLeft;
             originY = Console.CursorTop;
             bool login = true;
@@ -53,9 +52,10 @@ namespace _31927Assignment1
             }
         }
 
+    //HELPER FUNCTIONS
         static void Table(string title, string subtitle = "", string content = "") //dynamically draw tables, content = .txt file path for table body (folder: MenuTemplates)
         {
-            pos.Clear(); //clear any previously stored positions
+            inputPos.Clear(); //clear any previously stored positions
             Console.Clear(); //clear any previous display
             int x, y; //initialise cursor pos for input fields
 
@@ -84,7 +84,7 @@ namespace _31927Assignment1
                 {
                     text = line.Remove(line.Length - 1); //remove delimiter, see LoginMenu.txt
                     x = line.Length + 1; //x position = end of string, + 1 for space
-                    pos.Add((x, y)); //store input field's input position
+                    inputPos.Add((x, y)); //store input field's input position
                 }
                 Console.WriteLine($"║{text}{new String(' ', width - text.Length)}║");
                 y++;
@@ -100,12 +100,12 @@ namespace _31927Assignment1
                                  text, ""); //create padding before and after text
         }
 
-        static void ClearAllFields(List<(int, int)> pos) //clears all input fields
+        static void ClearAllFields(List<(int, int)> inputPos) //clears all input fields
         {
-            for (int i = 0; i < pos.Count; i++) //for each input field pos
+            foreach ((int, int) pos in inputPos) //for each input field pos
             {
-                Console.SetCursorPosition(originX + pos[i].Item1, originY + pos[i].Item2); //set cursor pos to input field
-                Console.Write(new String(' ', width - pos[i].Item1)); //replace here up to table width with whitespace
+                Console.SetCursorPosition(originX + pos.Item1, originY + pos.Item2); //set cursor pos to input field
+                Console.Write(new String(' ', width - pos.Item1)); //replace here up to table width with whitespace
             }
         }
 
@@ -116,7 +116,7 @@ namespace _31927Assignment1
             Console.SetCursorPosition(originX + x, originY + y);
         }
 
-        static void WritePrompt((int, int) pos, string msg, bool newLine = true)
+        static void WritePrompt((int, int) pos, string msg, bool newLine = true) //for writing prompts or error messages
         {
             Console.SetCursorPosition(((width - msg.Length) / 2) + 1, pos.Item2 + 1); //write at centre of console window
             if (newLine)
@@ -125,6 +125,46 @@ namespace _31927Assignment1
                 Console.Write(msg);
         }
 
+        private static string ReadLineWithCancel() //returns null if esc is pressed during input (useful for going back to main menu)
+        {
+            string input;
+            StringBuilder line = new StringBuilder();
+            var key = Console.ReadKey(true);
+
+            while (key.Key != ConsoleKey.Enter && key.Key != ConsoleKey.Escape)
+            {
+                if (key.Key == ConsoleKey.Backspace && line.Length > 0)
+                {
+                    line.Remove(line.Length - 1, 1);
+                    Console.CursorLeft--;
+                    Console.Write(' ');
+                    Console.CursorLeft--;
+                }
+                else if (key.Key != ConsoleKey.Backspace) //have to include this else if, otherwise the user can keep pressing backspace past the input field...
+                {
+                    Console.Write(key.KeyChar);
+                    line.Append(key.KeyChar);
+                }
+                key = Console.ReadKey(true);
+            }
+            return input = key.Key == ConsoleKey.Enter ? line.ToString() : null;
+        }
+
+        static void ResizeWindow((int, int) pos) //resize window according to table height and width
+        {
+            try //try because set WindowHeight/Width is incompatible on OSX
+            {
+                Console.WindowHeight = pos.Item2 + 3;
+                Console.WindowWidth = width + 3;
+                Console.SetCursorPosition(originX, originY); //scroll to top
+            }
+            catch (System.NotSupportedException)
+            {
+                return;
+            }
+        }
+
+    //MENU FUNCTIONS
         static void LoginMenu()
         {
             Table("Bank Account Management Console", "Login", "MenuTemplates/LoginMenu.txt");
@@ -135,9 +175,9 @@ namespace _31927Assignment1
             //username and password input loop
             while (true)
             {
-                for (int i = 0; i < pos.Count; i++) //for each input field
+                for (int i = 0; i < inputPos.Count; i++) //for each input field
                 {
-                    Console.SetCursorPosition(originX + pos[i].Item1, originY + pos[i].Item2); //go to its position
+                    Console.SetCursorPosition(originX + inputPos[i].Item1, originY + inputPos[i].Item2); //go to its position
                     if (i == 0)
                         credentials[i] = Console.ReadLine(); //username input
                     else
@@ -174,7 +214,7 @@ namespace _31927Assignment1
                     }
                 }
                 credentials = new string[2]; //...otherwise they were invalid credentials...
-                ClearAllFields(pos);
+                ClearAllFields(inputPos);
                 WritePrompt(errorMsgPos, "Incorrect username or password.");
                 //...so go again
             }
@@ -190,11 +230,11 @@ namespace _31927Assignment1
             //keep looping until valid option is inputted
             while (true)
             {
-                Console.SetCursorPosition(originX + pos[0].Item1, originY + pos[0].Item2); //go to input field position
+                Console.SetCursorPosition(originX + inputPos[0].Item1, originY + inputPos[0].Item2); //go to input field position
                 choice = Console.ReadLine();
                 if (!int.TryParse(choice, out _) || 1 > Int32.Parse(choice) || Int32.Parse(choice) > 7) //check if input isnt an integer; if it is, check if it isnt in range
                 {
-                    ClearAllFields(pos);
+                    ClearAllFields(inputPos);
                     WritePrompt(errorMsgPos, "Invalid option; input a number between 1-7.");
                 }
                 else break;
@@ -214,9 +254,9 @@ namespace _31927Assignment1
 
             while (true)
             {
-                for (int i = 0; i < pos.Count; i++)
+                for (int i = 0; i < inputPos.Count; i++)
                 {
-                    Console.SetCursorPosition(originX + pos[i].Item1, originY + pos[i].Item2);
+                    Console.SetCursorPosition(originX + inputPos[i].Item1, originY + inputPos[i].Item2);
                     input = ReadLineWithCancel(); //if esc is pressed, returns null
                     if (input == null) //menu is exited
                         return;
@@ -234,7 +274,7 @@ namespace _31927Assignment1
                                 WritePrompt(errorMsgPos, "Invalid email format.");
                             else break;
                         }
-                        ClearField(pos[i].Item1, pos[i].Item2);
+                        ClearField(inputPos[i].Item1, inputPos[i].Item2);
                         input = ReadLineWithCancel();
                     }
                     credentials[i] = input;
@@ -259,52 +299,13 @@ namespace _31927Assignment1
                     if (choice.KeyChar.Equals('n'))
                     {
                         credentials = new string[5];
-                        ClearAllFields(pos);
+                        ClearAllFields(inputPos);
                         WritePrompt(errorMsgPos, new String(' ', width));
                         break;
                     }
                     if (choice.Key == ConsoleKey.Escape)
                         return;
                 }
-            }
-        }
-
-        private static string ReadLineWithCancel() //returns null if esc is pressed during input (useful for going back to main menu)
-        {
-            string input;
-            StringBuilder line = new StringBuilder();
-            var key = Console.ReadKey(true);
-            
-            while (key.Key != ConsoleKey.Enter && key.Key != ConsoleKey.Escape)
-            {
-                if (key.Key == ConsoleKey.Backspace && line.Length > 0)
-                {
-                    line.Remove(line.Length - 1, 1);
-                    Console.CursorLeft--;
-                    Console.Write(' '); 
-                    Console.CursorLeft--;
-                }
-                else if (key.Key != ConsoleKey.Backspace) //have to include this else if, otherwise the user can keep pressing backspace past the input field...
-                {
-                    Console.Write(key.KeyChar);
-                    line.Append(key.KeyChar);
-                }
-                key = Console.ReadKey(true);
-            }
-            return input = key.Key == ConsoleKey.Enter ? line.ToString() : null;
-        }
-
-        static void ResizeWindow((int, int) pos) //resize window according to table height and width
-        {
-            try //try because set WindowHeight/Width is incompatible on OSX
-            {
-                Console.WindowHeight = pos.Item2 + 3;
-                Console.WindowWidth = width + 3;
-                Console.SetCursorPosition(originX, originY); //scroll to top
-            }
-            catch (System.NotSupportedException) 
-            {
-                return;
             }
         }
     }
