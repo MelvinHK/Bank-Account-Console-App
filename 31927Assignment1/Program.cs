@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Net.Mail;
+using System.Net;
+using System.Diagnostics;
 using System.ComponentModel.DataAnnotations;
 
 
@@ -53,15 +56,16 @@ namespace _31927Assignment1
         }
 
     //HELPER FUNCTIONS
-        static void Table(string title, string subtitle = "", string content = "") //dynamically draw tables, content = .txt file path for table body (folder: MenuTemplates)
+        static void Table(string title, string subtitle = "", string file = "") //dynamically draw tables, file = .txt file path for table body (folder: MenuTemplates)
         {
             inputPos.Clear(); //clear any previously stored positions
             Console.Clear(); //clear any previous display
             int x, y; //initialise cursor pos for input fields
+            string path = @"..\..\..\MenuTemplates\" + file;
 
             //header
             string border = new('═', width);
-            Console.WriteLine($"╔{border}╗");
+            Console.WriteLine($"╔{ border}╗");
             Console.WriteLine($"║{CentreText(title)}║");
             Console.WriteLine($"╠{border}╣");
 
@@ -77,7 +81,7 @@ namespace _31927Assignment1
             Console.WriteLine(lineBreak);
 
             //body
-            foreach (string line in File.ReadLines(content)) //read menu template
+            foreach (string line in File.ReadLines(path)) //read menu template
             {
                 string text = line;
                 if (!string.IsNullOrWhiteSpace(line) && line[line.Length - 1] == '|') //check if line is an input field
@@ -118,29 +122,31 @@ namespace _31927Assignment1
 
         static void WritePrompt((int, int) pos, string msg, bool newLine = true) //for writing prompts or error messages
         {
+            Console.CursorVisible = false;
+            Console.SetCursorPosition(0, pos.Item2 + 1);
+            Console.WriteLine(new String(' ', width));
             Console.SetCursorPosition(((width - msg.Length) / 2) + 1, pos.Item2 + 1); //write at centre of console window
             if (newLine)
                 Console.WriteLine(msg);
             else
                 Console.Write(msg);
+            Console.CursorVisible = true;
         }
 
-        private static string ReadLineWithCancel() //returns null if esc is pressed during input (useful for going back to main menu)
+        private static string ReadLineWithCancel() //Console.ReadLine(), except returns null if esc is pressed during input (useful for going back to main menu)
         {
             string input;
             StringBuilder line = new StringBuilder();
             var key = Console.ReadKey(true);
 
-            while (key.Key != ConsoleKey.Enter && key.Key != ConsoleKey.Escape)
+            while ((key.Key != ConsoleKey.Enter) && key.Key != ConsoleKey.Escape)
             {
                 if (key.Key == ConsoleKey.Backspace && line.Length > 0)
                 {
                     line.Remove(line.Length - 1, 1);
-                    Console.CursorLeft--;
-                    Console.Write(' ');
-                    Console.CursorLeft--;
+                    Console.Write("\b \b");
                 }
-                else if (key.Key != ConsoleKey.Backspace) //have to include this else if, otherwise the user can keep pressing backspace past the input field...
+                else if (key.Key != ConsoleKey.Backspace && key.KeyChar != '\u0000') //and disable arrow key input
                 {
                     Console.Write(key.KeyChar);
                     line.Append(key.KeyChar);
@@ -164,10 +170,15 @@ namespace _31927Assignment1
             }
         }
 
+        static void SendConfirmationEmail(string recipient, string[] credentials)
+        {
+            
+        }
+
     //MENU FUNCTIONS
         static void LoginMenu()
         {
-            Table("Bank Account Management Console", "Login", "MenuTemplates/LoginMenu.txt");
+            Table("Bank Account Management Console", "Login", "LoginMenu.txt");
             (int, int) errorMsgPos = Console.GetCursorPosition(); //store pos for error message, which at this time is below the table
             ResizeWindow(errorMsgPos); //use errorMsgPos as height for resize
             string[] credentials = new string[2]; //0 = username, 1 = password
@@ -189,10 +200,8 @@ namespace _31927Assignment1
                         {
                             if (key.Key == ConsoleKey.Backspace && input.Length > 0)
                             {
-                                input.Remove(input.Length - 1, 1);
-                                Console.CursorLeft--; //on the display, go back to the last char typed
-                                Console.Write(' '); //replace it with emptiness
-                                Console.CursorLeft--; //have to go back again because Write() makes cursor go forward one
+                                input.Remove(input.Length - 1, 1); //remove last char
+                                Console.Write("\b \b");
                             }
                             else if (key.Key != ConsoleKey.Backspace) //if any other key was pressed
                             {
@@ -205,7 +214,7 @@ namespace _31927Assignment1
                     }    
                 }
                 //attempt to find match
-                foreach (string line in File.ReadLines("Storage/Login.txt"))
+                foreach (string line in File.ReadLines(@"..\..\..\Storage\Login.txt"))
                 {
                     string[] check = line.Split('|'); //split username and password by delimiter
                     if (check[0].Trim().ToLower().Equals(credentials[0].ToLower()) && check[1].Trim().Equals(credentials[1]))
@@ -222,7 +231,7 @@ namespace _31927Assignment1
 
         static int MainMenu()
         {
-            Table("Main Menu", "Options", "MenuTemplates/MainMenu.txt");
+            Table("Main Menu", "Options", "MainMenu.txt");
             (int, int) errorMsgPos = Console.GetCursorPosition();
             ResizeWindow(errorMsgPos);
             string choice;
@@ -244,7 +253,7 @@ namespace _31927Assignment1
 
         static void CreateAccountMenu()
         {
-            Table("Create New Account", "Enter details", "MenuTemplates/NewAccountMenu.txt");
+            Table("Create New Account", "Enter details", "NewAccountMenu.txt");
             (int, int) errorMsgPos = Console.GetCursorPosition();
             Console.SetCursorPosition(2, 1);
             Console.Write("< Esc");
@@ -258,45 +267,79 @@ namespace _31927Assignment1
                 {
                     Console.SetCursorPosition(originX + inputPos[i].Item1, originY + inputPos[i].Item2);
                     input = ReadLineWithCancel(); //if esc is pressed, returns null
-                    if (input == null) //menu is exited
-                        return;
-                    while (i == 3 || i == 4) //phone (3) and email (4) validation
+
+                    //phone and email validation loop
+                    while ((i == 3 || i == 4) && input != null)
                     {
                         if (i == 3)
                         {
-                            if (!(int.TryParse(input, out _) && input.Length <= 10))
-                                WritePrompt(errorMsgPos, "Invalid phone format.");
+                            if (!(int.TryParse(input, out _) && input.Length == 10))
+                                WritePrompt(errorMsgPos, "Invalid phone number.");
                             else break;
                         }
                         else
                         {
-                            if (!new EmailAddressAttribute().IsValid(input)) //check for gmail.com, student email, outlook.com later
-                                WritePrompt(errorMsgPos, "Invalid email format.");
+                            if (!(new EmailAddressAttribute().IsValid(input) && (input.Substring(input.IndexOf('@')).Equals("@gmail.com") ||
+                                                                                 input.Substring(input.IndexOf('@')).Equals("@outlook.com") ||
+                                                                                 input.Substring(input.IndexOf('@')).Equals("@uts.edu.au") ||
+                                                                                 input.Substring(input.IndexOf('@')).Equals("@student.uts.edu.au"))))
+                                WritePrompt(errorMsgPos, "Invalid email address.");
                             else break;
                         }
                         ClearField(inputPos[i].Item1, inputPos[i].Item2);
                         input = ReadLineWithCancel();
                     }
+                    if (input == null) //exit menu if esc was pressed
+                        return;
                     credentials[i] = input;
                 }
+
+                //confirm loop (keep reading keystroke until y, n, or esc is pressed)
                 WritePrompt(errorMsgPos, "Confirm details (Y/N)", false);
                 while (true)
                 {
                     ConsoleKeyInfo choice = Console.ReadKey(true);
                     if (choice.KeyChar.Equals('y'))
                     {
-                        Random generator = new Random();
-                        string id = generator.Next(0, 1000000).ToString("D6");
-                        //check if id is unique (nest below in for loop < 1000000. if for loop becomes finished = max capacity)
+                        string id = new Random().Next(0, 1000000).ToString("D6"); //generate account id
+                        string path = @"..\..\..\Storage\BankAccounts";
+                        var fileNames = Directory
+                                       .GetFiles(path, "*", SearchOption.AllDirectories)
+                                       .Select(f => Path.GetFileName(f)); //get array of file names from directory
+                        var fileSet = new HashSet<string>(fileNames); //convert into hashset for faster lookup
+                        Stopwatch timer = new Stopwatch();
+                        timer.Start();
+                        WritePrompt(errorMsgPos, "Loading...", false);
+                        while (fileSet.Contains(id + ".txt")) //loop while id isnt unique
+                        {
+                            if (timer.ElapsedMilliseconds > 2000) //abort if it takes longer than 2 seconds
+                            {
+                                WritePrompt(errorMsgPos, "Unable to create new account.", false);
+                                Console.ReadKey(true);
+                                return;
+                            }
+                            id = new Random().Next(0, 1000000).ToString("D6"); //try again with new id
+                        }
+                        using (StreamWriter sw = File.CreateText($"{path}/{id}.txt"))
+                        {
+                            sw.WriteLine(id); //line 0: acc id
+                            foreach (string line in credentials) //1: name, 2: last, 3: addr, 4: phone, 5: email
+                            {
+                                sw.WriteLine(line);
+                            }
+                            sw.WriteLine(0); //6: starting balance
+                        }
+
+                        //send email
+
+
                         ResizeWindow(Console.GetCursorPosition());
                         WritePrompt(errorMsgPos, $"Account created (id: {id})");
                         WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Details sent to email.", false);
-
                         Console.ReadKey(true);
-                        //add details to id.txt file
                         return;
                     }
-                    if (choice.KeyChar.Equals('n'))
+                    if (choice.KeyChar.Equals('n')) //if confirmation cancelled, reset menu
                     {
                         credentials = new string[5];
                         ClearAllFields(inputPos);

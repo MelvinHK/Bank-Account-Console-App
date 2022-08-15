@@ -9,25 +9,22 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="MenuTemplates\LoginMenu.txt" />
-    <None Remove="MenuTemplates\MainMenu.txt" />
-    <None Remove="MenuTemplates\NewAccountMenu.txt" />
-    <None Remove="Storage\Login.txt" />
+    <Folder Include="Storage\BankAccounts\" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="MenuTemplates\LoginMenu.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MenuTemplates\MainMenu.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MenuTemplates\NewAccountMenu.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Storage\Login.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <None Update="MenuTemplates\LoginMenu.txt">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="MenuTemplates\MainMenu.txt">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="MenuTemplates\NewAccountMenu.txt">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Storage\Login.txt">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
