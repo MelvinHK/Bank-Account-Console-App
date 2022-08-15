@@ -170,7 +170,7 @@ namespace _31927Assignment1
             }
         }
 
-        static void SendConfirmationEmail(string recipient, string[] credentials)
+        static void SendEmail(int choice)
         {
             
         }
@@ -251,13 +251,16 @@ namespace _31927Assignment1
             return Int32.Parse(choice); //return choice 
         }
 
+
+
         static void CreateAccountMenu()
         {
             Table("Create New Account", "Enter details", "NewAccountMenu.txt");
             (int, int) errorMsgPos = Console.GetCursorPosition();
             Console.SetCursorPosition(2, 1);
-            Console.Write("< Esc");
+            Console.Write("< Esc"); //indicator to go back to main menu
             ResizeWindow(errorMsgPos);
+            var domains = new HashSet<string> { "@gmail.com", "@outlook.com", "@uts.edu.au", "@student.uts.edu.au"}; //valid email domains
             string[] credentials = new string[5];
             string input;
 
@@ -279,10 +282,7 @@ namespace _31927Assignment1
                         }
                         else
                         {
-                            if (!(new EmailAddressAttribute().IsValid(input) && (input.Substring(input.IndexOf('@')).Equals("@gmail.com") ||
-                                                                                 input.Substring(input.IndexOf('@')).Equals("@outlook.com") ||
-                                                                                 input.Substring(input.IndexOf('@')).Equals("@uts.edu.au") ||
-                                                                                 input.Substring(input.IndexOf('@')).Equals("@student.uts.edu.au"))))
+                            if (!new EmailAddressAttribute().IsValid(input) || !domains.Contains(input.Substring(input.IndexOf('@'))))
                                 WritePrompt(errorMsgPos, "Invalid email address.");
                             else break;
                         }
@@ -294,23 +294,26 @@ namespace _31927Assignment1
                     credentials[i] = input;
                 }
 
-                //confirm loop (keep reading keystroke until y, n, or esc is pressed)
+                //confirm loop (keep reading keystroke until y or n is pressed)
                 WritePrompt(errorMsgPos, "Confirm details (Y/N)", false);
                 while (true)
                 {
                     ConsoleKeyInfo choice = Console.ReadKey(true);
                     if (choice.KeyChar.Equals('y'))
                     {
-                        string id = new Random().Next(0, 1000000).ToString("D6"); //generate account id
+                        int cap = 1000000;
+                        string id = new Random().Next(0, cap).ToString("D6"); //generate account id
                         string path = @"..\..\..\Storage\BankAccounts";
                         var fileNames = Directory
                                        .GetFiles(path, "*", SearchOption.AllDirectories)
                                        .Select(f => Path.GetFileName(f)); //get array of file names from directory
-                        var fileSet = new HashSet<string>(fileNames); //convert into hashset for faster lookup
+                        var fileSet = new HashSet<string>(fileNames); //convert into set for faster lookup
                         Stopwatch timer = new Stopwatch();
                         timer.Start();
                         WritePrompt(errorMsgPos, "Loading...", false);
-                        while (fileSet.Contains(id + ".txt")) //loop while id isnt unique
+
+                        //loop while id isnt unique
+                        while (fileSet.Contains(id + ".txt")) 
                         {
                             if (timer.ElapsedMilliseconds > 2000) //abort if it takes longer than 2 seconds
                             {
@@ -318,8 +321,10 @@ namespace _31927Assignment1
                                 Console.ReadKey(true);
                                 return;
                             }
-                            id = new Random().Next(0, 1000000).ToString("D6"); //try again with new id
+                            id = new Random().Next(0, cap).ToString("D6"); //try again with new id
                         }
+
+                        //create {id}.txt file
                         using (StreamWriter sw = File.CreateText($"{path}/{id}.txt"))
                         {
                             sw.WriteLine(id); //line 0: acc id
@@ -346,8 +351,6 @@ namespace _31927Assignment1
                         WritePrompt(errorMsgPos, new String(' ', width));
                         break;
                     }
-                    if (choice.Key == ConsoleKey.Escape)
-                        return;
                 }
             }
         }
