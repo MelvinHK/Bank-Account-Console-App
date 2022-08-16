@@ -61,7 +61,8 @@ namespace _31927Assignment1
         {
             inputPos.Clear(); //clear any previously stored positions
             Console.Clear(); //clear any previous display
-            int x, y; //initialise cursor pos for input fields
+            int x = originX; //initialise cursor pos for input fields
+            int y = originY;
             string path = @"..\..\..\MenuTemplates\" + file;
 
             //header
@@ -131,8 +132,8 @@ namespace _31927Assignment1
         static void WritePrompt((int, int) pos, string msg, bool newLine = true) //for writing prompts or error messages
         {
             Console.CursorVisible = false; //hide cursor to prevent any flickering as it jumps to new positions
-            Console.SetCursorPosition(originX, pos.Item2 + 1);
-            Console.WriteLine(new String(' ', width)); //clear line
+            Console.SetCursorPosition(originX, pos.Item2 + 1); //clear any previous message that is in the same Y
+            Console.WriteLine(new String(' ', width));
             Console.SetCursorPosition(((width - msg.Length) / 2) + 1, pos.Item2 + 1); //write at centre of console window
             if (newLine)
                 Console.WriteLine(msg);
@@ -203,7 +204,7 @@ namespace _31927Assignment1
             MailMessage mail = new MailMessage(new MailAddress("bamc31927@gmail.com"),
                                                new MailAddress(credentials[5]));
 
-            if (choice == 1)
+            if (choice == 1) //welcome
             {
                 mail.Subject = "Welcome to BAMC";
                 mail.Body = $"Hi {credentials[1]}, welcome to BAMC. Your account details are as follows: \n\n" +
@@ -215,11 +216,10 @@ namespace _31927Assignment1
                             $"Email: {credentials[5]} \n\n" +
                             $"BAMC";
             }
-            if (choice == 2)
+            if (choice == 2) //account statment
             {
                 mail.Subject = "";
             }
-
             smtp.Send(mail);
         }
 
@@ -299,7 +299,6 @@ namespace _31927Assignment1
 
         static void NewAccountMenu()
         {
-            Start:
             Table("Create New Account", "Enter details", "NewAccountMenu.txt", true);
             (int, int) errorMsgPos = Console.GetCursorPosition();
             var domains = new HashSet<string> { "@gmail.com", "@outlook.com", "@uts.edu.au", "@student.uts.edu.au"}; //valid email domains
@@ -356,9 +355,9 @@ namespace _31927Assignment1
                         //loop while id isnt unique
                         while (fileSet.Contains(id + ".txt")) 
                         {
-                            if (timer.ElapsedMilliseconds > 2000) //abort if it takes longer than 2 seconds
+                            if (timer.ElapsedMilliseconds > 2000) //abort if it takes longer than 2 seconds, max accounts probably reached
                             {
-                                WritePrompt(errorMsgPos, "Unable to create new account.", false);
+                                WritePrompt(errorMsgPos, "Unable to create new accounts.", false);
                                 Console.ReadKey(true);
                                 return;
                             }
@@ -384,16 +383,14 @@ namespace _31927Assignment1
                         WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Details sent. Press any key to continue.", false);
                         ConsoleKeyInfo key = Console.ReadKey(true);
                         if (key.Key.Equals(ConsoleKey.Escape)) return;
-                        else goto Start;
+                        else break;
                     }
-                    if (choice.KeyChar.Equals('n')) //if confirmation cancelled, reset menu
-                    {
-                        credentials = new string[5];
-                        ClearAllFields(inputPos);
-                        WritePrompt(errorMsgPos, new String(' ', width));
+                    if (choice.KeyChar.Equals('n'))
                         break;
-                    }
                 }
+                credentials = new string[5];
+                WritePrompt(errorMsgPos, new string(' ', width));
+                ClearAllFields(inputPos);
             }
         }
 
