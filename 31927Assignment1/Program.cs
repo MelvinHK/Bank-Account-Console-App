@@ -175,7 +175,6 @@ namespace _31927Assignment1
             }
             catch (System.NotSupportedException)
             {
-                Console.SetCursorPosition(pos.Item1, pos.Item2);
                 return;
             }
         }
@@ -319,7 +318,7 @@ namespace _31927Assignment1
                     {
                         if (i == 3)
                         {
-                            if (!(int.TryParse(input, out _) && input.Length == 10))
+                            if (!(Int64.TryParse(input, out _) && input.Length == 10))
                                 WritePrompt(errorMsgPos, "Invalid phone number.");
                             else break;
                         }
@@ -411,7 +410,7 @@ namespace _31927Assignment1
                 Console.SetCursorPosition(originX + inputPos[0].Item1, originY + inputPos[0].Item2);
                 input = ReadLineWithCancel();
                 if (input == null) return;
-                if (!int.TryParse(input, out _) || input.Length != 6)
+                if (!Int32.TryParse(input, out _) || input.Length != 6)
                 {
                     ClearAllFields(inputPos);
                     WritePrompt(errorMsgPos, "Invalid account ID.");
