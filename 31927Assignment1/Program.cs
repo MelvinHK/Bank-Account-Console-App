@@ -71,9 +71,9 @@ namespace _31927Assignment1
             Console.WriteLine($"╠{border}╣");
             if (esc) //show escape indicator for going back to main menu
             {
-                Console.SetCursorPosition(2, 1);
+                Console.SetCursorPosition(originX + 2, originX + 1);
                 Console.Write("< Esc");
-                Console.SetCursorPosition(0, 3);
+                Console.SetCursorPosition(originX, originY + 3);
             }
 
             //subtitle
@@ -377,7 +377,7 @@ namespace _31927Assignment1
                         }
 
                         //send email
-                        ResizeWindow(Console.GetCursorPosition());
+                        ResizeWindow(Console.GetCursorPosition()); //resize window to look good for two prompt lines
                         WritePrompt(errorMsgPos, $"Account created (id: {id})");
                         WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Sending details to email, please wait...", false);
                         SendEmail(1, id);
@@ -421,7 +421,7 @@ namespace _31927Assignment1
             if (credentials == null)
             {
                 ClearAllFields(inputPos);
-                WritePrompt(errorMsgPos, "Could not find account.");
+                WritePrompt(errorMsgPos, "Account does not exist.");
                 goto Loop;
             }
             Table("Account Found", $"ID: {input}", "AccountFoundMenu.txt", true);
