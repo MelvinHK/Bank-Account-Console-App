@@ -193,7 +193,7 @@ namespace _31927Assignment1
             }
         }
 
-        static void UpdateLine(string id, int index, string newText)
+        static void UpdateLine(string id, int index, string newText) //updates line in an account .txt file
         {
             string path = accountsPath + $"{id}.txt";
             string[] lines = File.ReadAllLines(path);
