@@ -15,6 +15,8 @@ namespace _31927Assignment1
     class Program
     {
         const int width = 50; //width of table
+        const string accountsPath = @"..\..\..\Storage\BankAccounts\";
+        const string templatesPath = @"..\..\..\MenuTemplates\";
         static List<(int, int)> inputPos = new List<(int, int)>(); //store cursor positions for input fields when creating tables
 
         static void Main(string[] args)
@@ -45,6 +47,7 @@ namespace _31927Assignment1
                     case 5:
                         break;
                     case 6:
+                        SearchMenu(true); //delete account
                         break;
                     case 7: //Exit
                         auth = false; //login menu will show in next loop
@@ -60,7 +63,7 @@ namespace _31927Assignment1
             inputPos.Clear(); //clear any previously stored positions
             Console.Clear(); //clear any previous display
             int inputX, inputY; //initialise cursor pos for input fields
-            string path = @"..\..\..\MenuTemplates\" + file;
+            string path = templatesPath + file;
 
             //header
             string border = new('═', width);
@@ -182,7 +185,7 @@ namespace _31927Assignment1
         {
             try
             {
-                return File.ReadAllLines(@"..\..\..\Storage\BankAccounts\" + $"{id}.txt");
+                return File.ReadAllLines(accountsPath + $"{id}.txt");
             } 
             catch (FileNotFoundException)
             {
@@ -192,7 +195,7 @@ namespace _31927Assignment1
 
         static void UpdateLine(string id, int index, string newText)
         {
-            string path = @"..\..\..\Storage\BankAccounts\" + $"{id}.txt";
+            string path = accountsPath + $"{id}.txt";
             string[] lines = File.ReadAllLines(path);
             lines[index] = newText;
             File.WriteAllLines(path, lines);
@@ -200,7 +203,7 @@ namespace _31927Assignment1
 
         static void SendEmail(int choice, string id) //send welcome details or bank account statement to acc id's email (assumes id exists)
         {
-            string path = @"..\..\..\Storage\BankAccounts\" + $"{id}.txt";
+            string path = accountsPath + $"{id}.txt";
             string[] credentials = GetAccount(id);
             
             SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587);
@@ -209,7 +212,6 @@ namespace _31927Assignment1
 
             MailMessage mail = new MailMessage(new MailAddress("bamc31927@gmail.com"),
                                                new MailAddress(credentials[5]));
-
             if (choice == 1) //welcome
             {
                 mail.Subject = "Welcome to BAMC";
@@ -312,7 +314,6 @@ namespace _31927Assignment1
             {
                 Console.SetCursorPosition(inputPos[i].Item1, inputPos[i].Item2);
                 input = ReadLineWithCancel(); //if esc is pressed, returns null
-
                 //phone and email validation loop
                 while ((i == 3 || i == 4) && input != null)
                 {
@@ -343,9 +344,8 @@ namespace _31927Assignment1
                 {
                     int cap = 1000000;
                     string id = new Random().Next(0, cap).ToString("D6"); //generate account id (D6 = with leading zeros)
-                    string path = @"..\..\..\Storage\BankAccounts";
                     var fileSet = new HashSet<string>(Directory
-                                                     .GetFiles(path, "*", SearchOption.AllDirectories)
+                                                     .GetFiles(accountsPath, "*", SearchOption.AllDirectories)
                                                      .Select(f => Path.GetFileName(f))); //get array of filenames, turn into hashset for fast lookup
                     Stopwatch timer = new();
                     timer.Start();
@@ -362,7 +362,7 @@ namespace _31927Assignment1
                         id = new Random().Next(0, cap).ToString("D6"); //try again with new id
                     }
                     //create {id}.txt file
-                    using (StreamWriter sw = File.CreateText($"{path}/{id}.txt"))
+                    using (StreamWriter sw = File.CreateText($"{accountsPath}{id}.txt"))
                     {
                         sw.WriteLine(id); //line 0: acc id
                         foreach (string line in credentials) //1: name, 2: last, 3: addr, 4: phone, 5: email
@@ -383,17 +383,19 @@ namespace _31927Assignment1
                 }
                 if (choice.KeyChar.Equals('n')) break;
             }
+            //resetting menu
             credentials = new string[5];
-            WritePrompt(errorMsgPos, ""); //clear prompt messages
+            WritePrompt(errorMsgPos, ""); //clear prompt lines
             Console.Write(new String(' ', width));
             ClearAllFields(inputPos);
             goto Start;
         }
 
-        static void SearchMenu()
+        static void SearchMenu(bool delete = false) //search for an account, and delete it depening on bool
         {
+            string title = delete ? "Delete Account" : "Search Account";
             Start:
-            Table("Search Account", "Enter 6 digits", "SearchMenu.txt", true);
+            Table(title, "Enter 6 digits", "SearchMenu.txt", true);
             (int, int) errorMsgPos = Console.GetCursorPosition();
             string[] credentials;
             string input;
@@ -418,13 +420,30 @@ namespace _31927Assignment1
                 Console.SetCursorPosition(inputPos[i-1].Item1, inputPos[i-1].Item2);
                 Console.Write(credentials[i]);
             }
+            if (delete)
+            {
+                WritePrompt(errorMsgPos, "Confirm deletion (Y/N)", false);
+                while (true)
+                {
+                    ConsoleKeyInfo choice = Console.ReadKey(true);
+                    if (choice.KeyChar.Equals('y'))
+                    {
+                        File.Delete(accountsPath + $"{input}.txt");
+                        WritePrompt(errorMsgPos, "Account deleted.", false);
+                        ResizeWindow(Console.GetCursorPosition());
+                        errorMsgPos = (errorMsgPos.Item1, errorMsgPos.Item2 + 1);
+                        break;
+                    }
+                    if (choice.KeyChar.Equals('n')) goto Start;
+                }
+            }
             WritePrompt(errorMsgPos, "Press any key to continue.", false);
             ConsoleKeyInfo key = Console.ReadKey(true);
             if (key.Key.Equals(ConsoleKey.Escape)) return;
             else goto Start;
         }
 
-        static void TransactionMenu(bool deposit = true)
+        static void TransactionMenu(bool deposit = true) //handles deposit and withdrawal, depending on bool
         {
             string title = deposit ? "Deposit" : "Withdraw";
             Table(title, "Enter details", "TransactionMenu.txt", true);
@@ -469,13 +488,13 @@ namespace _31927Assignment1
                 }
                 if (input == null) return;
             }
-
+            //updating balance
             string updated = Math.Round(double.Parse(credentials[6]) + double.Parse(input), 2).ToString("0.00");
             UpdateLine(id, 6, updated);
             WritePrompt(errorMsgPos, $"Updated balance: ${updated}", false);
             WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Press any key to continue.", false);
-            ConsoleKeyInfo key = Console.ReadKey(true);
 
+            ConsoleKeyInfo key = Console.ReadKey(true);
             if (key.Key.Equals(ConsoleKey.Escape)) return;
 
             ClearAllFields(inputPos);
