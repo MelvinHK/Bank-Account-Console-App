@@ -14,23 +14,23 @@ namespace _31927Assignment1
 {
     class Program
     {
-        const int width = 50; //width of table
+        const int width = 50;
         const string accountsPath = @"..\..\..\Storage\BankAccounts\";
         const string templatesPath = @"..\..\..\MenuTemplates\";
-        static List<(int, int)> inputPos = new List<(int, int)>(); //store cursor positions for input fields when creating tables
+        static List<(int, int)> inputPos = new List<(int, int)>(); //store cursor positions for input fields
 
         static void Main(string[] args)
         {
             Console.Title = "Bank Account Management Console";
             bool auth = false;
-            while (true) //main program loop
+            while (true)
             {
                 if (!auth)
                 {
-                    LoginMenu(); //login menu first
+                    LoginMenu();
                     auth = true;
                 }
-                switch (MainMenu()) //after successful login, load main menu
+                switch (MainMenu())
                 {
                     case 1:
                         NewAccountMenu();
@@ -38,38 +38,37 @@ namespace _31927Assignment1
                     case 2:
                         SearchMenu();
                         break;
-                    case 3:
-                        TransactionMenu(); //deposit
+                    case 3: //deposit
+                        TransactionMenu(); 
                         break;
-                    case 4:
-                        TransactionMenu(false); //withdraw
+                    case 4: //withdraw
+                        TransactionMenu(false); 
                         break;
                     case 5:
                         break;
-                    case 6:
-                        SearchMenu(true); //delete account
+                    case 6: //delete account
+                        SearchMenu(true); 
                         break;
-                    case 7: //Exit
-                        auth = false; //login menu will show in next loop
+                    case 7: //exit
+                        auth = false;
                         break;
                 }
-                //repeat until console is closed
             }
         }
 
     //HELPER FUNCTIONS
-        static void Table(string title, string subtitle = "", string file = "", bool esc = false) //dynamically draw tables, file = .txt file path for table body (folder: MenuTemplates)
+        static void Table(string title, string subtitle = "", string file = "", bool esc = false)
         {
-            inputPos.Clear(); //clear any previously stored positions
-            Console.Clear(); //clear any previous display
-            int inputX, inputY; //initialise cursor pos for input fields
+            inputPos.Clear();
+            Console.Clear();
+            int inputX, inputY; //cursor pos for input fields
             string path = templatesPath + file;
 
             //header
             string border = new('═', width);
             Console.WriteLine($"╔{border}╗");
             Console.WriteLine($"║{CentreText(title)}║");
-            if (esc) //show escape indicator for going back to main menu
+            if (esc)
             {
                 Console.SetCursorPosition(2, 1);
                 Console.WriteLine("< Esc");
@@ -88,54 +87,53 @@ namespace _31927Assignment1
             Console.WriteLine(lineBreak);
 
             //body
-            foreach (string line in File.ReadLines(path)) //read menu template
+            foreach (string line in File.ReadLines(path))
             {
                 string text = line;
                 if (!string.IsNullOrWhiteSpace(line) && line[line.Length - 1] == '|') //check if line is an input field
                 {
-                    text = line.Remove(line.Length - 1); //remove delimiter (|)
-                    inputX = line.Length; //x position at the end of the string
-                    inputPos.Add((inputX, inputY)); //store position
+                    text = line.Remove(line.Length - 1);
+                    inputX = line.Length;
+                    inputPos.Add((inputX, inputY));
                 }
                 Console.WriteLine($"║{text}{new String(' ', width - text.Length)}║");
                 inputY++;
             }
             Console.WriteLine(lineBreak);
             Console.WriteLine($"╚{border}╝");
-            ResizeWindow(Console.GetCursorPosition()); //resize console window to table size
         }
 
-        static string CentreText(string text) //centres text WITHIN table (not for centering in console window)
+        static string CentreText(string text) //centering text within tables
         {
             return String.Format("{0," + ((width / 2) + (text.Length / 2)) + "}" +
                                  "{1," + ((width / 2) - (text.Length / 2)) + "}",
                                  text, ""); //create padding before and after text
         }
 
-        static void ClearAllFields(List<(int, int)> inputPos) //clears all input fields
+        static void ClearAllFields(List<(int, int)> inputPos)
         {
             Console.CursorVisible = false; //hide cursor to prevent any flickering as it jumps to new positions
-            foreach ((int, int) pos in inputPos) //for each input field pos
+            foreach ((int, int) pos in inputPos)
             {
-                Console.SetCursorPosition(pos.Item1, pos.Item2); //set cursor pos to input field
-                Console.Write(new String(' ', width - pos.Item1)); //replace here up to table width with whitespace
+                Console.SetCursorPosition(pos.Item1, pos.Item2);
+                Console.Write(new String(' ', width - pos.Item1));
             }
             Console.CursorVisible = true;
         }
 
-        static void ClearField(int x, int y) //clears an input field and maintains cursor pos
+        static void ClearField(int x, int y)
         {
             Console.SetCursorPosition(x, y);
             Console.Write(new String(' ', width - x)); 
             Console.SetCursorPosition(x, y);
         }
 
-        static void WritePrompt((int, int) pos, string msg, bool newLine = true) //for writing prompts or error messages
+        static void WritePrompt((int, int) pos, string msg, bool newLine = true)
         {
             Console.CursorVisible = false; 
-            Console.SetCursorPosition(0, pos.Item2 + 1); //clear any previous message that is in the same Y position
+            Console.SetCursorPosition(0, pos.Item2 + 1); //clear any previous message
             Console.WriteLine(new String(' ', width));
-            Console.SetCursorPosition(((width - msg.Length) / 2) + 1, pos.Item2 + 1); //write at centre of console window
+            Console.SetCursorPosition(((width - msg.Length) / 2) + 1, pos.Item2 + 1); //centre of console window
             if (newLine)
                 Console.WriteLine(msg);
             else
@@ -143,7 +141,16 @@ namespace _31927Assignment1
             Console.CursorVisible = true;
         }
 
-        private static string ReadLineWithCancel() //Console.ReadLine(), except returns null if esc is pressed during input (useful for going back to main menu)
+        static void ClearPrompts((int, int) pos)
+        {
+            Console.CursorVisible = false;
+            Console.SetCursorPosition(0, pos.Item2 + 1);
+            Console.WriteLine(new String(' ', width));
+            Console.WriteLine(new String(' ', width));
+            Console.CursorVisible = true;
+        }
+
+        private static string ReadLineWithCancel() //returns null if esc pressed during input
         {
             string input;
             StringBuilder line = new StringBuilder();
@@ -166,21 +173,6 @@ namespace _31927Assignment1
             return input = key.Key == ConsoleKey.Enter ? line.ToString().Trim() : null;
         }
 
-        static void ResizeWindow((int, int) pos) //resize window according to table height and width
-        {
-            try //try because set WindowHeight/Width is incompatible on OSX
-            {
-                Console.WindowHeight = pos.Item2 + 3;
-                Console.WindowWidth = width + 3;
-                Console.SetCursorPosition(0, 0); //scroll to top
-                Console.SetCursorPosition(pos.Item1, pos.Item2); //then set cursor back to former position
-            }
-            catch (System.NotSupportedException)
-            {
-                return;
-            }
-        }
-
         static string[] GetAccount(string id) //0: id, 1: name, 2: last, 3: addr, 4: phone, 5: email, 6: balance
         {
             try
@@ -193,7 +185,7 @@ namespace _31927Assignment1
             }
         }
 
-        static void UpdateLine(string id, int index, string newText) //updates line in an account .txt file
+        static void UpdateLine(string id, int index, string newText) //update an account .txt file
         {
             string path = accountsPath + $"{id}.txt";
             string[] lines = File.ReadAllLines(path);
@@ -201,7 +193,7 @@ namespace _31927Assignment1
             File.WriteAllLines(path, lines);
         }
 
-        static void SendEmail(int choice, string id) //send welcome details or bank account statement to acc id's email (assumes id exists)
+        static void SendEmail(int choice, string id)
         {
             string path = accountsPath + $"{id}.txt";
             string[] credentials = GetAccount(id);
@@ -212,7 +204,7 @@ namespace _31927Assignment1
 
             MailMessage mail = new MailMessage(new MailAddress("bamc31927@gmail.com"),
                                                new MailAddress(credentials[5]));
-            if (choice == 1) //welcome
+            if (choice == 1)
             {
                 mail.Subject = "Welcome to BAMC";
                 mail.Body = $"Hi {credentials[1]}, welcome to BAMC. Your account details are as follows: \n\n" +
@@ -224,7 +216,7 @@ namespace _31927Assignment1
                             $"Email: {credentials[5]} \n\n" +
                             $"BAMC";
             }
-            if (choice == 2) //account statment
+            if (choice == 2)
             {
                 mail.Subject = "";
             }
@@ -247,38 +239,38 @@ namespace _31927Assignment1
                 else
                 {
                     //password input and masking loop
-                    var key = Console.ReadKey(true); //read keystroke (true = doesnt display keystroke)
+                    var key = Console.ReadKey(true);
                     StringBuilder input = new StringBuilder();
                     while (key.Key != ConsoleKey.Enter)
                     {
                         if (key.Key == ConsoleKey.Backspace && input.Length > 0)
                         {
-                            input.Remove(input.Length - 1, 1); //remove last char
+                            input.Remove(input.Length - 1, 1);
                             Console.Write("\b \b");
                         }
-                        else if (key.Key != ConsoleKey.Backspace && key.KeyChar != '\u0000') //if any other key was pressed (and disable arrow keys)
+                        else if (key.Key != ConsoleKey.Backspace && key.KeyChar != '\u0000')
                         {
-                            Console.Write("*"); //display keystroke as asterik
-                            input.Append(key.KeyChar); //append actual keystroke
+                            Console.Write("*");
+                            input.Append(key.KeyChar);
                         }
-                        key = Console.ReadKey(true); //read next keystroke
+                        key = Console.ReadKey(true);
                     }
-                    credentials[i] = input.ToString(); //enter was pressed, pass it over to credentials array
+                    credentials[i] = input.ToString();
                 }
             }
             //username and password input complete, attempt to find match
             foreach (string line in File.ReadLines(@"..\..\..\Storage\Login.txt"))
             {
-                string[] check = line.Split('|'); //split username and password by delimiter
+                string[] check = line.Split('|');
                 if (check[0].Trim().ToLower().Equals(credentials[0].ToLower()) && check[1].Trim().Equals(credentials[1]))
                 {
-                    return; //break out of function if found match...
+                    return; //match found, break out of function
                 }
             }
-            credentials = new string[2]; //...otherwise they were invalid credentials...
+            credentials = new string[2]; //otherwise reset menu
             ClearAllFields(inputPos);
             WritePrompt(errorMsgPos, "Incorrect username or password.");
-            goto Start; //...so go again
+            goto Start;
         }
 
         static int MainMenu()
@@ -286,19 +278,19 @@ namespace _31927Assignment1
             Table("Main Menu", "Options", "MainMenu.txt");
             (int, int) errorMsgPos = Console.GetCursorPosition();
             string choice;
-            //keep looping until valid option is inputted
+
             while (true)
             {
-                Console.SetCursorPosition(inputPos[0].Item1, inputPos[0].Item2); //go to input field position
+                Console.SetCursorPosition(inputPos[0].Item1, inputPos[0].Item2);
                 choice = Console.ReadLine();
-                if (!int.TryParse(choice, out _) || 1 > Int32.Parse(choice) || Int32.Parse(choice) > 7) //check if input isnt an integer; if it is, check if it isnt in range
+                if (!int.TryParse(choice, out _) || 1 > Int32.Parse(choice) || Int32.Parse(choice) > 7)
                 {
                     ClearAllFields(inputPos);
                     WritePrompt(errorMsgPos, "Invalid option number.");
                 }
                 else break;
             }
-            return Int32.Parse(choice); //return choice 
+            return Int32.Parse(choice);
         }
 
         static void NewAccountMenu()
@@ -313,7 +305,7 @@ namespace _31927Assignment1
             for (int i = 0; i < inputPos.Count; i++)
             {
                 Console.SetCursorPosition(inputPos[i].Item1, inputPos[i].Item2);
-                input = ReadLineWithCancel(); //if esc is pressed, returns null
+                input = ReadLineWithCancel();
                 //phone and email validation loop
                 while ((i == 3 || i == 4) && input != null)
                 {
@@ -335,7 +327,7 @@ namespace _31927Assignment1
                 if (input == null) return; //exit menu if esc was pressed
                 credentials[i] = input;
             }
-            //confirm loop (keep reading keystroke until y or n is pressed)
+            //confirmation loop
             WritePrompt(errorMsgPos, "Confirm details (Y/N)", false);
             while (true)
             {
@@ -343,10 +335,10 @@ namespace _31927Assignment1
                 if (choice.KeyChar.Equals('y'))
                 {
                     int cap = 1000000;
-                    string id = new Random().Next(0, cap).ToString("D6"); //generate account id (D6 = with leading zeros)
+                    string id = new Random().Next(0, cap).ToString("D6"); //D6 = allow leading zeros
                     var fileSet = new HashSet<string>(Directory
                                                      .GetFiles(accountsPath, "*", SearchOption.AllDirectories)
-                                                     .Select(f => Path.GetFileName(f))); //get array of filenames, turn into hashset for fast lookup
+                                                     .Select(f => Path.GetFileName(f))); //array of filenames, turn into hashset for faster lookup
                     Stopwatch timer = new();
                     timer.Start();
                     WritePrompt(errorMsgPos, "Loading...", false);
@@ -359,7 +351,7 @@ namespace _31927Assignment1
                             Console.ReadKey(true);
                             return;
                         }
-                        id = new Random().Next(0, cap).ToString("D6"); //try again with new id
+                        id = new Random().Next(0, cap).ToString("D6");
                     }
                     //create {id}.txt file
                     using (StreamWriter sw = File.CreateText($"{accountsPath}{id}.txt"))
@@ -372,26 +364,23 @@ namespace _31927Assignment1
                         sw.WriteLine(0); //6: starting balance
                     }
                     //send email
-                    ResizeWindow(Console.GetCursorPosition()); //resize window to look good for two prompt lines
                     WritePrompt(errorMsgPos, $"Account created (id: {id})");
                     WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Sending details to email, please wait...", false);
                     SendEmail(1, id);
                     WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Details sent. Press any key to continue.", false);
+                    
                     ConsoleKeyInfo key = Console.ReadKey(true);
                     if (key.Key.Equals(ConsoleKey.Escape)) return;
                     else break;
                 }
                 if (choice.KeyChar.Equals('n')) break;
             }
-            //resetting menu
-            credentials = new string[5];
-            WritePrompt(errorMsgPos, ""); //clear prompt lines
-            Console.Write(new String(' ', width));
+            ClearPrompts(errorMsgPos);
             ClearAllFields(inputPos);
             goto Start;
         }
 
-        static void SearchMenu(bool delete = false) //search for an account, and delete it depening on bool
+        static void SearchMenu(bool delete = false)
         {
             string title = delete ? "Delete Account" : "Search Account";
             Start:
@@ -420,7 +409,7 @@ namespace _31927Assignment1
                 Console.SetCursorPosition(inputPos[i-1].Item1, inputPos[i-1].Item2);
                 Console.Write(credentials[i]);
             }
-            if (delete)
+            if (delete) //if delete menu
             {
                 WritePrompt(errorMsgPos, "Confirm deletion (Y/N)", false);
                 while (true)
@@ -430,7 +419,6 @@ namespace _31927Assignment1
                     {
                         File.Delete(accountsPath + $"{input}.txt");
                         WritePrompt(errorMsgPos, "Account deleted.", false);
-                        ResizeWindow(Console.GetCursorPosition());
                         errorMsgPos = (errorMsgPos.Item1, errorMsgPos.Item2 + 1);
                         break;
                     }
@@ -443,7 +431,7 @@ namespace _31927Assignment1
             else goto Start;
         }
 
-        static void TransactionMenu(bool deposit = true) //handles deposit and withdrawal, depending on bool
+        static void TransactionMenu(bool deposit = true)
         {
             string title = deposit ? "Deposit" : "Withdraw";
             Table(title, "Enter details", "TransactionMenu.txt", true);
@@ -456,7 +444,7 @@ namespace _31927Assignment1
             for (int i = 0; i < inputPos.Count; i++)
             {
                 Console.SetCursorPosition(inputPos[i].Item1, inputPos[i].Item2);
-                input = ReadLineWithCancel(); //if esc is pressed, returns null
+                input = ReadLineWithCancel();
                 while (input != null)
                 {
                     if (i == 0) //account validation
@@ -468,15 +456,14 @@ namespace _31927Assignment1
                         {
                             id = input;
                             WritePrompt(errorMsgPos, "Account found.", false);
-                            ResizeWindow(Console.GetCursorPosition());
                             WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), $"Current Balance: ${credentials[6]}");
                             break;
                         }
                     }
                     else //amount validation
                     {
-                        //first check if amount = positive double. then, if not depositing, check if withdrawal amount < balance.
-                        if (double.TryParse(input, out double amount) && amount > 0 && (deposit || double.Parse(credentials[6]) - amount >= 0))
+                        //check if amount = positive double && if not depositing, check if withdrawal amount < balance.
+                        if (double.TryParse(input, out double amount) && amount > 0 && (deposit || amount <= double.Parse(credentials[6])))
                         {
                             input = !deposit ? (amount *= -1).ToString() : input; //convert to negative if withdrawing
                             break;
@@ -496,10 +483,9 @@ namespace _31927Assignment1
 
             ConsoleKeyInfo key = Console.ReadKey(true);
             if (key.Key.Equals(ConsoleKey.Escape)) return;
-
+            
+            ClearPrompts(errorMsgPos);
             ClearAllFields(inputPos);
-            WritePrompt(errorMsgPos, "");
-            Console.WriteLine(new String(' ', width));
             goto Start;
         }
     }
