@@ -467,9 +467,9 @@ namespace _31927Assignment1
                         else
                         {
                             id = input;
-                            WritePrompt(errorMsgPos, $"Account found.", false);
+                            WritePrompt(errorMsgPos, "Account found.", false);
                             ResizeWindow(Console.GetCursorPosition());
-                            WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1),$"Current Balance: ${credentials[6]}");
+                            WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), $"Current Balance: ${credentials[6]}");
                             break;
                         }
                     }
@@ -481,7 +481,7 @@ namespace _31927Assignment1
                             input = !deposit ? (amount *= -1).ToString() : input; //convert to negative if withdrawing
                             break;
                         }
-                        else WritePrompt(errorMsgPos, $"Invalid amount.");
+                        else WritePrompt(errorMsgPos, "Invalid amount.");
                     }
                     ClearField(inputPos[i].Item1, inputPos[i].Item2);
                     input = ReadLineWithCancel();
