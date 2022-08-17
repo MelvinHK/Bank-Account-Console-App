@@ -6,4 +6,4 @@
       6. Delete account
       7. Exit
 
-      #:|
+      #: |
