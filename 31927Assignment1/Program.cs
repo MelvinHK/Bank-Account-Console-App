@@ -15,15 +15,11 @@ namespace _31927Assignment1
     class Program
     {
         const int width = 50; //width of table
-        static int originX;
-        static int originY;
         static List<(int, int)> inputPos = new List<(int, int)>(); //store cursor positions for input fields when creating tables
 
         static void Main(string[] args)
         {
             Console.Title = "Bank Account Management Console";
-            originX = Console.CursorLeft;
-            originY = Console.CursorTop;
             bool login = true;
             while (true) //main program loop
             {
@@ -61,21 +57,19 @@ namespace _31927Assignment1
         {
             inputPos.Clear(); //clear any previously stored positions
             Console.Clear(); //clear any previous display
-            int x = originX; //initialise cursor pos for input fields
-            int y = originY;
+            int x, y; //initialise cursor pos for input fields
             string path = @"..\..\..\MenuTemplates\" + file;
 
             //header
             string border = new('═', width);
-            Console.WriteLine($"╔{ border}╗");
+            Console.WriteLine($"╔{border}╗");
             Console.WriteLine($"║{CentreText(title)}║");
-            Console.WriteLine($"╠{border}╣");
             if (esc) //show escape indicator for going back to main menu
             {
-                Console.SetCursorPosition(originX + 2, originX + 1);
-                Console.Write("< Esc");
-                Console.SetCursorPosition(originX, originY + 3);
+                Console.SetCursorPosition(2, 1);
+                Console.WriteLine("< Esc");
             }
+            Console.WriteLine($"╠{border}╣");
 
             //subtitle
             string lineBreak = $"║{new String(' ', width)}║";
@@ -117,22 +111,22 @@ namespace _31927Assignment1
         {
             foreach ((int, int) pos in inputPos) //for each input field pos
             {
-                Console.SetCursorPosition(originX + pos.Item1, originY + pos.Item2); //set cursor pos to input field
+                Console.SetCursorPosition(pos.Item1, pos.Item2); //set cursor pos to input field
                 Console.Write(new String(' ', width - pos.Item1)); //replace here up to table width with whitespace
             }
         }
 
         static void ClearField(int x, int y) //clears an input field and maintains cursor pos
         {
-            Console.SetCursorPosition(originX + x, originY + y);
+            Console.SetCursorPosition(x, y);
             Console.Write(new String(' ', width - x)); 
-            Console.SetCursorPosition(originX + x, originY + y);
+            Console.SetCursorPosition(x, y);
         }
 
         static void WritePrompt((int, int) pos, string msg, bool newLine = true) //for writing prompts or error messages
         {
             Console.CursorVisible = false; //hide cursor to prevent any flickering as it jumps to new positions
-            Console.SetCursorPosition(originX, pos.Item2 + 1); //clear any previous message that is in the same Y
+            Console.SetCursorPosition(0, pos.Item2 + 1); //clear any previous message that is in the same Y
             Console.WriteLine(new String(' ', width));
             Console.SetCursorPosition(((width - msg.Length) / 2) + 1, pos.Item2 + 1); //write at centre of console window
             if (newLine)
@@ -171,7 +165,7 @@ namespace _31927Assignment1
             {
                 Console.WindowHeight = pos.Item2 + 3;
                 Console.WindowWidth = width + 3;
-                Console.SetCursorPosition(originX, originY); //scroll to top
+                Console.SetCursorPosition(0, 0); //scroll to top
                 Console.SetCursorPosition(pos.Item1, pos.Item2); //then set cursor back to former position
             }
             catch (System.NotSupportedException)
@@ -235,7 +229,7 @@ namespace _31927Assignment1
             {
                 for (int i = 0; i < inputPos.Count; i++) //for each input field
                 {
-                    Console.SetCursorPosition(originX + inputPos[i].Item1, originY + inputPos[i].Item2); //go to its position
+                    Console.SetCursorPosition(inputPos[i].Item1, inputPos[i].Item2); //go to its position
                     if (i == 0)
                         credentials[i] = Console.ReadLine(); //username input
                     else
@@ -285,7 +279,7 @@ namespace _31927Assignment1
             //keep looping until valid option is inputted
             while (true)
             {
-                Console.SetCursorPosition(originX + inputPos[0].Item1, originY + inputPos[0].Item2); //go to input field position
+                Console.SetCursorPosition(inputPos[0].Item1, inputPos[0].Item2); //go to input field position
                 choice = Console.ReadLine();
                 if (!int.TryParse(choice, out _) || 1 > Int32.Parse(choice) || Int32.Parse(choice) > 7) //check if input isnt an integer; if it is, check if it isnt in range
                 {
@@ -309,7 +303,7 @@ namespace _31927Assignment1
             {
                 for (int i = 0; i < inputPos.Count; i++)
                 {
-                    Console.SetCursorPosition(originX + inputPos[i].Item1, originY + inputPos[i].Item2);
+                    Console.SetCursorPosition(inputPos[i].Item1, inputPos[i].Item2);
                     input = ReadLineWithCancel(); //if esc is pressed, returns null
 
                     //phone and email validation loop
@@ -344,18 +338,17 @@ namespace _31927Assignment1
                         int cap = 1000000;
                         string id = new Random().Next(0, cap).ToString("D6"); //generate account id (D6 = with leading zeros)
                         string path = @"..\..\..\Storage\BankAccounts";
-                        var fileNames = Directory
-                                       .GetFiles(path, "*", SearchOption.AllDirectories)
-                                       .Select(f => Path.GetFileName(f)); //get array of file names from directory
-                        var fileSet = new HashSet<string>(fileNames); //convert into set for faster lookup
-                        Stopwatch timer = new Stopwatch();
+                        var fileSet = new HashSet<string>(Directory
+                                                         .GetFiles(path, "*", SearchOption.AllDirectories)
+                                                         .Select(f => Path.GetFileName(f))); //get array of filenames, turn into hashset for fast lookup
+                        Stopwatch timer = new();
                         timer.Start();
                         WritePrompt(errorMsgPos, "Loading...", false);
 
                         //loop while id isnt unique
                         while (fileSet.Contains(id + ".txt")) 
                         {
-                            if (timer.ElapsedMilliseconds > 2000) //abort if it takes longer than 2 seconds, max accounts probably reached
+                            if (timer.ElapsedMilliseconds > 2000) //abort if it takes longer than 2 seconds, max accounts likely reached
                             {
                                 WritePrompt(errorMsgPos, "Unable to create new accounts.", false);
                                 Console.ReadKey(true);
@@ -389,7 +382,8 @@ namespace _31927Assignment1
                         break;
                 }
                 credentials = new string[5];
-                WritePrompt(errorMsgPos, new string(' ', width));
+                WritePrompt(errorMsgPos, new string(' ', width)); //clear prompt messages
+                Console.WriteLine(new String(' ', width));
                 ClearAllFields(inputPos);
             }
         }
@@ -399,33 +393,27 @@ namespace _31927Assignment1
             Start:
             Table("Search Account", "Enter 6 digits", "SearchMenu.txt", true);
             (int, int) errorMsgPos = Console.GetCursorPosition();
+            string[] credentials;
             string input;
 
-            Loop:
             while (true)
             {
-                Console.SetCursorPosition(originX + inputPos[0].Item1, originY + inputPos[0].Item2);
+                Console.SetCursorPosition(inputPos[0].Item1, inputPos[0].Item2);
                 input = ReadLineWithCancel();
                 if (input == null) return;
-                if (!Int32.TryParse(input, out _) || input.Length != 6)
+                credentials = GetAccount(input);
+                if (credentials == null)
                 {
                     ClearAllFields(inputPos);
-                    WritePrompt(errorMsgPos, "Invalid account ID.");
+                    WritePrompt(errorMsgPos, "Account does not exist.");
                 }
                 else break;
-            }
-            string[] credentials = GetAccount(input);
-            if (credentials == null)
-            {
-                ClearAllFields(inputPos);
-                WritePrompt(errorMsgPos, "Account does not exist.");
-                goto Loop;
             }
             Table("Account Found", $"ID: {input}", "AccountFoundMenu.txt", true);
             errorMsgPos = Console.GetCursorPosition();
             for (int i = 1; i < inputPos.Count + 1; i++)
             {
-                Console.SetCursorPosition(originX + inputPos[i-1].Item1, originY + inputPos[i-1].Item2);
+                Console.SetCursorPosition(inputPos[i-1].Item1, inputPos[i-1].Item2);
                 Console.Write(credentials[i]);
             }
             WritePrompt(errorMsgPos, "Press any key to continue.", false);
