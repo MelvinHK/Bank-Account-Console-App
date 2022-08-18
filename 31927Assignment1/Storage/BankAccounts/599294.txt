@@ -4,4 +4,9 @@ Hadi Kusuma
 Street Ave
 1234567890
 mhk.boy88@gmail.com
-100.00
+249.45
+19/08/2022 Withdrew 5.99 111.45
+19/08/2022 Deposited 6.00 117.45
+19/08/2022 Deposited 100.00 217.45
+19/08/2022 Withdrew 68.00 149.45
+19/08/2022 Deposited 100.00 249.45

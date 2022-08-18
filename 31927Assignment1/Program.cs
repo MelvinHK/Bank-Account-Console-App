@@ -488,11 +488,17 @@ namespace _31927Assignment1
                 }
                 Console.SetCursorPosition(inputPos[5].Item1, inputPos[5].Item2); //print opening balance
                 Console.Write(GetOpeningBalance(input));
-                for (int i = 7; i < credentials.Length; i++) //print transactions
+                if (credentials.Length == 7)
                 {
-                    Console.SetCursorPosition(inputPos[i - 1].Item1, inputPos[i - 1].Item2);
-                    Console.Write(credentials[i]);
+                    Console.SetCursorPosition(inputPos[8].Item1, inputPos[8].Item2);
+                    Console.Write("No recent transactions.");
                 }
+                else
+                    for (int i = 7; i < credentials.Length; i++) //print transactions
+                    {
+                        Console.SetCursorPosition(inputPos[i - 1].Item1, inputPos[i - 1].Item2);
+                        Console.Write(credentials[i]);
+                    }
                 Console.SetCursorPosition(inputPos[11].Item1, inputPos[11].Item2); //print closing balance
                 Console.Write(credentials[6]);
                 WritePrompt(errorMsgPos, "Email statement (Y/N)", false);

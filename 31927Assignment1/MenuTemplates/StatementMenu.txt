@@ -6,9 +6,11 @@
 
       Summary:
       Opening Balance: $|
+
       |
       |
       |
       |
       |
+
       Closing Balance: $|
