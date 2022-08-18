@@ -44,10 +44,11 @@ namespace _31927Assignment1
                     case 4: //withdraw
                         TransactionMenu(false); 
                         break;
-                    case 5:
+                    case 5: //statement
+                        SearchMenu(3);
                         break;
                     case 6: //delete account
-                        SearchMenu(true); 
+                        SearchMenu(2); 
                         break;
                     case 7: //exit
                         auth = false;
@@ -185,12 +186,50 @@ namespace _31927Assignment1
             }
         }
 
-        static void UpdateLine(string id, int index, string newText) //update an account .txt file
+        static void UpdateLine(string id, int index, string updated) //update a line in account txt file
         {
-            string path = accountsPath + $"{id}.txt";
+            string path = $"{accountsPath}{id}.txt";
             string[] lines = File.ReadAllLines(path);
-            lines[index] = newText;
+            lines[index] = updated;
             File.WriteAllLines(path, lines);
+        }
+
+        static void AddTransaction(string id, string amount, string newBalance, bool deposit = true)
+        {
+            string path = $"{accountsPath}{id}.txt";
+            List<string> lines = new List<string>(File.ReadLines(path));
+            List<string> temp = lines.GetRange(0, 7); //store other details first
+            lines.RemoveRange(0, 7);
+            Queue<string> activity = new Queue<string>(lines);
+
+            DateTime date = DateTime.Today;
+            string transaction = deposit ? "Deposited" : "Withdrew";
+
+            if (activity.Count >= 5)
+                activity.Dequeue();
+            activity.Enqueue($"{date.ToShortDateString()} {transaction} {amount} {newBalance}");
+
+            File.WriteAllLines(path, temp.Concat(activity));
+        }
+
+        static string GetOpeningBalance(string id)
+        {
+            string path = $"{accountsPath}{id}.txt";
+            List<string> lines = new List<string>(File.ReadLines(path));
+            double balance = double.Parse(lines[6]);
+            double totalWithdrawn = 0.00;
+            double totalDeposited = 0.00;
+            lines.RemoveRange(0, 6);
+
+            if (lines.Count != 0)
+                foreach (string line in lines)
+                {
+                    if (line.Contains("Withdrew"))
+                        totalWithdrawn += double.Parse(line.Split(" ")[2]);
+                    else if (line.Contains("Deposited"))
+                        totalDeposited += double.Parse(line.Split(" ")[2]);
+                }
+            return (balance - (totalDeposited - totalWithdrawn)).ToString("0.00");
         }
 
         static void SendEmail(int choice, string id)
@@ -218,7 +257,15 @@ namespace _31927Assignment1
             }
             if (choice == 2)
             {
-                mail.Subject = "";
+                mail.Subject = "Your BAMC Account Statement";
+                mail.Body = $"Hi {credentials[1]}, welcome to BAMC. Your account details are as follows: \n\n" +
+                           $"Account ID: {credentials[0]} \n" +
+                           $"First name: {credentials[1]} \n" +
+                           $"Last name: {credentials[2]} \n" +
+                           $"Address: {credentials[3]} \n" +
+                           $"Phone: {credentials[4]} \n" +
+                           $"Email: {credentials[5]} \n\n" +
+                           $"BAMC";
             }
             smtp.Send(mail);
         }
@@ -365,7 +412,7 @@ namespace _31927Assignment1
                     }
                     //send email
                     WritePrompt(errorMsgPos, $"Account created (id: {id})");
-                    WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Sending details to email, please wait...", false);
+                    WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Emailing details, please wait...", false);
                     SendEmail(1, id);
                     WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Details sent. Press any key to continue.", false);
                     
@@ -380,9 +427,11 @@ namespace _31927Assignment1
             goto Start;
         }
 
-        static void SearchMenu(bool delete = false)
+        static void SearchMenu(int menu = 1) //for menus that require id searching
         {
-            string title = delete ? "Delete Account" : "Search Account";
+            string title = menu == 1 ? "Search Account" : 
+                           menu == 2 ? "Delete Account" : 
+                           menu == 3 ? "Get Statement" : "";
             Start:
             Table(title, "Enter 6 digits", "SearchMenu.txt", true);
             (int, int) errorMsgPos = Console.GetCursorPosition();
@@ -402,14 +451,17 @@ namespace _31927Assignment1
                 }
                 else break;
             }
-            Table("Account Found", $"ID: {input}", "AccountFoundMenu.txt", true);
-            errorMsgPos = Console.GetCursorPosition();
-            for (int i = 1; i < inputPos.Count + 1; i++)
+            if (menu <= 2)
             {
-                Console.SetCursorPosition(inputPos[i-1].Item1, inputPos[i-1].Item2);
-                Console.Write(credentials[i]);
+                Table("Account Found", $"ID: {input}", "AccountFoundMenu.txt", true);
+                errorMsgPos = Console.GetCursorPosition();
+                for (int i = 1; i < inputPos.Count + 1; i++)
+                {
+                    Console.SetCursorPosition(inputPos[i - 1].Item1, inputPos[i - 1].Item2);
+                    Console.Write(credentials[i]);
+                }
             }
-            if (delete) //if delete menu
+            if (menu == 2)
             {
                 WritePrompt(errorMsgPos, "Confirm deletion (Y/N)", false);
                 while (true)
@@ -425,7 +477,41 @@ namespace _31927Assignment1
                     if (choice.KeyChar.Equals('n')) goto Start;
                 }
             }
+            if (menu == 3)
+            {
+                Table("Account Statement", $"ID: {input}", "StatementMenu.txt", true);
+                errorMsgPos = Console.GetCursorPosition();
+                for (int i = 1; i < 6; i++) //print personal details first
+                {
+                    Console.SetCursorPosition(inputPos[i - 1].Item1, inputPos[i - 1].Item2);
+                    Console.Write(credentials[i]);
+                }
+                Console.SetCursorPosition(inputPos[5].Item1, inputPos[5].Item2); //print opening balance
+                Console.Write(GetOpeningBalance(input));
+                for (int i = 7; i < credentials.Length; i++) //print transactions
+                {
+                    Console.SetCursorPosition(inputPos[i - 1].Item1, inputPos[i - 1].Item2);
+                    Console.Write(credentials[i]);
+                }
+                Console.SetCursorPosition(inputPos[11].Item1, inputPos[11].Item2); //print closing balance
+                Console.Write(credentials[6]);
+                WritePrompt(errorMsgPos, "Email statement (Y/N)", false);
+                while (true)
+                {
+                    ConsoleKeyInfo choice = Console.ReadKey(true);
+                    if (choice.KeyChar.Equals('y'))
+                    {
+                        WritePrompt(errorMsgPos, "Emailing statement, please wait...", false);
+                        SendEmail(2, input);
+                        WritePrompt(errorMsgPos, "Statement sent.", false);
+                        errorMsgPos = (errorMsgPos.Item1, errorMsgPos.Item2 + 1);
+                        break;
+                    }
+                    if (choice.KeyChar.Equals('n')) goto Start;
+                }
+            }
             WritePrompt(errorMsgPos, "Press any key to continue.", false);
+            
             ConsoleKeyInfo key = Console.ReadKey(true);
             if (key.Key.Equals(ConsoleKey.Escape)) return;
             else goto Start;
@@ -439,6 +525,7 @@ namespace _31927Assignment1
             string[] credentials = Array.Empty<string>();
             string input = "";
             string id = "";
+            string newBalance = "";
 
             Start:
             for (int i = 0; i < inputPos.Count; i++)
@@ -462,10 +549,13 @@ namespace _31927Assignment1
                     }
                     else //amount validation
                     {
-                        //check if amount = positive double && if not depositing, check if withdrawal amount < balance.
+                        //check if amount = positive double. then, if not depositing, check if withdrawal amount < balance.
                         if (double.TryParse(input, out double amount) && amount > 0 && (deposit || amount <= double.Parse(credentials[6])))
                         {
-                            input = !deposit ? (amount *= -1).ToString() : input; //convert to negative if withdrawing
+                            amount = !deposit ? amount * -1 : amount; //convert to negative if withdrawing
+                            newBalance = Math.Round(double.Parse(credentials[6]) + amount, 2).ToString("0.00");
+                            UpdateLine(id, 6, newBalance);
+                            AddTransaction(id, double.Parse(input).ToString("0.00"), newBalance, deposit);
                             break;
                         }
                         else WritePrompt(errorMsgPos, "Invalid amount.");
@@ -475,10 +565,7 @@ namespace _31927Assignment1
                 }
                 if (input == null) return;
             }
-            //updating balance
-            string updated = Math.Round(double.Parse(credentials[6]) + double.Parse(input), 2).ToString("0.00");
-            UpdateLine(id, 6, updated);
-            WritePrompt(errorMsgPos, $"Updated balance: ${updated}", false);
+            WritePrompt(errorMsgPos, $"Updated balance: ${newBalance}", false);
             WritePrompt((errorMsgPos.Item1, errorMsgPos.Item2 + 1), "Press any key to continue.", false);
 
             ConsoleKeyInfo key = Console.ReadKey(true);
