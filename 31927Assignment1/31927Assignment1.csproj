@@ -12,19 +12,4 @@
     <Folder Include="Storage\BankAccounts\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="MenuTemplates\LoginMenu.txt">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="MenuTemplates\MainMenu.txt">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="MenuTemplates\NewAccountMenu.txt">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\Login.txt">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>
