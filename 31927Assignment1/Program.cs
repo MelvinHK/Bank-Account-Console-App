@@ -9,7 +9,6 @@ using System.Net;
 using System.Diagnostics;
 using System.ComponentModel.DataAnnotations;
 
-
 namespace _31927Assignment1
 {
     class Program
