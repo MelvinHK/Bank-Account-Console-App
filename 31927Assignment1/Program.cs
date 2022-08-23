@@ -60,7 +60,7 @@ namespace _31927Assignment1
             string path = templatesPath + file;
 
             // Header
-            string border = new('═', width);
+            string border = new String('═', width);
             Console.WriteLine($"╔{border}╗");
             Console.WriteLine($"║{CentreText(title)}║");
             if (esc)
@@ -383,7 +383,7 @@ namespace _31927Assignment1
                     var fileSet = new HashSet<string>(Directory
                                                      .GetFiles(accountsPath, "*", SearchOption.AllDirectories)
                                                      .Select(f => Path.GetFileName(f))); // Array of filenames, turn into hashset for faster lookup
-                    Stopwatch timer = new();
+                    Stopwatch timer = new Stopwatch();
                     timer.Start();
                     WritePrompt(errorMsgPos, "Loading...", false);
                     // Loop while id isnt unique
