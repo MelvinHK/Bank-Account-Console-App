@@ -1,0 +1,5 @@
+C:\Users\melvi\source\repos\31927Assignment1\31927Assignment1\bin\Release\net6.0\publish\31927Assignment1.exe
+C:\Users\melvi\source\repos\31927Assignment1\31927Assignment1\bin\Release\net6.0\publish\31927Assignment1.dll
+C:\Users\melvi\source\repos\31927Assignment1\31927Assignment1\bin\Release\net6.0\publish\31927Assignment1.deps.json
+C:\Users\melvi\source\repos\31927Assignment1\31927Assignment1\bin\Release\net6.0\publish\31927Assignment1.runtimeconfig.json
+C:\Users\melvi\source\repos\31927Assignment1\31927Assignment1\bin\Release\net6.0\publish\31927Assignment1.pdb

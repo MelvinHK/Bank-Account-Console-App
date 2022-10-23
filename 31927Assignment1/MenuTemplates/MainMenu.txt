@@ -1,0 +1,9 @@
+﻿      1. Create new account
+      2. Search account
+      3. Deposit
+      4. Withdraw
+      5. Get statement
+      6. Delete account
+      7. Exit
+
+      #: |
