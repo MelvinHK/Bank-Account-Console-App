@@ -1,6 +1,0 @@
-﻿      First Name: |
-      Last Name: |
-      Address: |
-      Phone: |
-      Email: |
-      Balance: $|
